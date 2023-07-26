@@ -1,6 +1,7 @@
 <?php
 
 namespace App;
+use app\middleware\Middleware;
 
 class Router {
 
@@ -43,25 +44,13 @@ class Router {
 
         foreach($this->routes as $route) {
             if($route['uri'] === $uri && $route['method'] === strtoupper($method)) {
-                //apply middleware
-                if($route['middleware'] === 'guest') {
-                    if(isset($_SESSION['user'])) {
-                        header('location: /');
-                        die();
-                    }
+
+                if($route['middleware'])
+                {
+                    $middleware = Middleware::MAP[$route['middleware']];
+                    (new $middleware)->handle();
                 }
-                if($route['middleware'] === 'auth') {
-                    if(!isset($_SESSION['user'])) {
-                        header('location: /login');
-                        die();
-                    }
-                }
-                if($route['middleware'] === 'admin') {
-                    if($_SESSION['user']['is_admin'] != 1) {
-                        header('location: /products');
-                        die();
-                    }
-                }
+            
                 return require BASE_PATH . $route['controller'];
             } 
         }
